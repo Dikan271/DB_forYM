@@ -10,8 +10,7 @@ using System.Windows.Forms;
 using System.Data.SqlClient;
 using System.IO;
 
-//TODO button DELETE
-//TODO button Export
+
 namespace YM_3._0
 {
     public struct Hipperlink
@@ -86,7 +85,6 @@ namespace YM_3._0
                 return;
             string user = this.listUsers.SelectedItem.ToString();
             ListPost_Reset(user);
-            this.buttonDelete.Hide();
         }
 
         private void ListPost_Reset(string user)
@@ -98,8 +96,6 @@ namespace YM_3._0
 
         private void listPosts_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (this.listPosts.SelectedIndex != -1)
-                this.buttonDelete.Show();
         }
 
         private void buttonClose_Click(object sender, EventArgs e)
@@ -188,6 +184,34 @@ namespace YM_3._0
             string work = "[" + first.work.name + "|" + first.work.ling + "]";
             file.WriteLine(work);
             file.Close();
+        }
+
+        private void buttonDelete_Click(object sender, EventArgs e)
+        {
+            var result = MessageBox.Show("are you sure?", "delete all data", MessageBoxButtons.YesNo);
+            if (result == System.Windows.Forms.DialogResult.Yes)
+                DeleteAllData();
+            ClearForm();
+        }
+
+        private void DeleteAllData()
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = new SqlCommand("[ClearDB]", connection);
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                var res = command.ExecuteNonQuery();
+                if (res != 0)
+                    MessageBox.Show("database was clear");
+            }
+        }
+
+        private void ClearForm()
+        {
+            this.listUsers.Items.Clear();
+            Fill_ListUser();
+            this.listPosts.Hide();
         }
     }
 }
