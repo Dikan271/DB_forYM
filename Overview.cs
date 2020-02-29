@@ -8,11 +8,25 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.SqlClient;
+using System.IO;
 
 //TODO button DELETE
-
+//TODO button Export
 namespace YM_3._0
 {
+    public struct Hipperlink
+    {
+        public string name;
+        public string ling;
+    };
+
+    public struct AllDataFromDB_YM
+    {
+        public int count;
+        public Hipperlink user;
+        public Hipperlink work;
+    };
+
     public partial class Overview : Form
     {
 
@@ -24,6 +38,7 @@ namespace YM_3._0
             this.listUsers.Show();
             this.listPosts.Hide();
         }
+
         private string connectionString = @"Data Source=.\SQLEXPRESS;Initial Catalog=YM;Integrated Security=True";
 
         private void Fill_ListUser()
@@ -121,10 +136,58 @@ namespace YM_3._0
 
         private void Export(SqlDataReader reader)
         {
+            reader.Read();
+            AllDataFromDB_YM prev, next;
+            prev = ReadLine(reader);
+            WriteFirstuser(prev);
             while (reader.Read())
             {
-
+                next = ReadLine(reader);
+                SetInfoInFile(prev, next);
+                prev = next;
             }
+            MessageBox.Show("file was created");
+        }
+
+        private AllDataFromDB_YM ReadLine(SqlDataReader reader)
+        {
+            AllDataFromDB_YM allData;
+            allData.count = reader.GetInt32(0);
+            allData.user.name = reader.GetString(1);
+            allData.user.ling = reader.GetString(2);
+            allData.work.name = reader.GetString(3);
+            allData.work.ling = reader.GetString(4);
+            return allData;
+        }
+
+        private void SetInfoInFile(AllDataFromDB_YM prev, AllDataFromDB_YM next)
+        {
+            var file = new StreamWriter("test1.txt",true);
+            if(next.count != prev.count)
+            {
+                string count = "[BC]" + next.count.ToString();
+                file.WriteLine(count);
+            }
+            if(next.user.ling != prev.user.ling)
+            {
+                string user = "[BC][" + next.user.name + "|" + next.user.ling + "]";
+                file.WriteLine(user);
+            }
+            string work = "[" + next.work.name + "|" + next.work.ling + "]";
+            file.WriteLine(work);
+            file.Close();
+        }
+
+        private void WriteFirstuser(AllDataFromDB_YM first)
+        {
+            var file = new StreamWriter("test1.txt", true);
+            string count = "[BC]" + first.count.ToString();
+            file.WriteLine(count);
+            string user = "[BC][" + first.user.name + "|" + first.user.ling + "]";
+            file.WriteLine(user);
+            string work = "[" + first.work.name + "|" + first.work.ling + "]";
+            file.WriteLine(work);
+            file.Close();
         }
     }
 }
